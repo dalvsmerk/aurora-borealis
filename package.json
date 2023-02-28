@@ -1,0 +1,14 @@
+{
+  "name": "aurora-borealis",
+  "version": "0.0.1",
+  "description": "Checks last 3-hour data of Kp index",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "@sendgrid/mail": "^7.7.0"
+  }
+}
