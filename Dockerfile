@@ -21,16 +21,17 @@ RUN chmod 0644 /etc/cron.d/notify-cron
 RUN touch /var/log/cron.log
 
 RUN apt-get update
-RUN apt-get -y install cron
+RUN apt-get -y install curl
 
-CMD cron && tail -f /var/log/cron.log
+# Install supercronic - a better replacement for cron
+ENV SUPERCRONIC_URL=https://github.com/aptible/supercronic/releases/download/v0.2.2/supercronic-linux-386 \
+    SUPERCRONIC=supercronic-linux-386 \
+    SUPERCRONIC_SHA1SUM=5f984723554c59034b464110d393f1c2b2de3e8a
 
+RUN curl -fsSLO "$SUPERCRONIC_URL" \
+ && echo "${SUPERCRONIC_SHA1SUM}  ${SUPERCRONIC}" | sha1sum -c - \
+ && chmod +x "$SUPERCRONIC" \
+ && mv "$SUPERCRONIC" "/usr/local/bin/${SUPERCRONIC}" \
+ && ln -s "/usr/local/bin/${SUPERCRONIC}" /usr/local/bin/supercronic
 
-# Run cron in background mode
-# RUN cron
-
-# RUN ["node", "worker.js"]
-
-# EXPOSE $PORT
-
-# CMD ["node", "server.js"]
+CMD supercronic /usr/local/app/crontab

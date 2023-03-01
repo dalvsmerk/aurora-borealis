@@ -50,7 +50,7 @@ function emailBody() {
 }
 
 function shouldNotify(datapoint) {
-    const MINOR_GEOMAGNETIC_STORM = 0;
+    const MINOR_GEOMAGNETIC_STORM = 5;
 
     return datapoint.kpIndex >= MINOR_GEOMAGNETIC_STORM;
 }

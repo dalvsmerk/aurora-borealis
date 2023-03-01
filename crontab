@@ -1,1 +1,1 @@
-* * * * * root /usr/local/bin/node /usr/local/app/worker.js >> /var/log/cron.log 2>&1
+5 */3 * * * /usr/local/bin/node /usr/local/app/worker.js >> /var/log/cron.log 2>&1
