@@ -31,11 +31,13 @@ async function init() {
 }
 
 function emailBody() {
+    const nowGMT = new Date().toGMTString();
     return `
 <p>Hey!</p>
 <p>There is high probability of aurora borealis visible, check your forecast!</p>
 <p>Best regards,</p>
 <p>Aurora Borealis Notifier</p>
+<p>${nowGMT}</p>
 <img src="${REALTIME_IMAGE}" width="300" alt="Aurora Borealis" />
     `;
 }
