@@ -24,3 +24,13 @@ RUN apt-get update
 RUN apt-get -y install cron
 
 CMD cron && tail -f /var/log/cron.log
+
+
+# Run cron in background mode
+# RUN cron
+
+# RUN ["node", "worker.js"]
+
+# EXPOSE $PORT
+
+# CMD ["node", "server.js"]

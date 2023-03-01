@@ -7,7 +7,7 @@ Every 3 hours checks for Kp-index and sends an email notification if it's over 5
 cp .env.example .env
 # Then insert values to .env
 npm i
-node app.js
+node worker.js
 ```
 
 ## Production

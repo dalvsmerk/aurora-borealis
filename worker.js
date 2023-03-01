@@ -1,14 +1,14 @@
+// 5 */3 * * *
+
+const { Console } = require('console');
+const fs = require('fs');
 const sendgrid = require('@sendgrid/mail');
 const { configure } = require('./config');
+const logger = createLogger();
 
 const REALTIME_IMAGE = 'https://www.sgo.fi/Data/RealTime/Kuvat/skyi_SOD_latest.jpg';
 
 init();
-
-// function entrypoint() {
-//     const hours3 = 1000 * 60 * 60 * 3;
-//     setInterval(init, hours3);
-// }
 
 async function init() {
     let config;
@@ -17,12 +17,12 @@ async function init() {
         config = configure();
         sendgrid.setApiKey(config.sendgridApiKey);
     } catch (error) {
-        console.error('Aurora Borealis failed to start', error.message);
+        logger.error('Aurora Borealis failed to start', error.message);
 
         process.exit(1);
     }
 
-    console.log('Aurora Borealis started successfully')
+    logger.info('Aurora Borealis started successfully')
 
     try {
         const lastDatapoint = await fetchLastKpIndex();
@@ -31,7 +31,7 @@ async function init() {
             sendEmailNotification(sendgrid, config);
         }
     } catch (error) {
-        console.log('Failed to fetch last Kp-index data', error);
+        logger.info('Failed to fetch last Kp-index data', error);
 
         process.exit(1);
     }
@@ -50,7 +50,7 @@ function emailBody() {
 }
 
 function shouldNotify(datapoint) {
-    const MINOR_GEOMAGNETIC_STORM = 5;
+    const MINOR_GEOMAGNETIC_STORM = 0;
 
     return datapoint.kpIndex >= MINOR_GEOMAGNETIC_STORM;
 }
@@ -84,7 +84,7 @@ function parseNOAADataPoint(noaaDatapoint) {
 
     return {
         time: noaaDatapoint[0],
-        kpIndex: noaaDatapoint[1], 
+        kpIndex: Number(noaaDatapoint[1]),
     };
 }
 
@@ -100,12 +100,24 @@ async function sendEmailNotification(mailClient, config) {
         const response = await mailClient.send(message);
 
         if (response[0].statusCode < 400) {
-            console.info('Email notification is sent successfully!');
+            logger.info('Email notification is sent successfully!');
         } else {
-            console.error('Failed to send email notification', response);
+            logger.error('Failed to send email notification', response);
         }
 
     } catch (error) {
-        console.error('Failed to send email notification', error.message);
+        logger.error('Failed to send email notification', error.message);
     }
+}
+
+function createLogger() {
+    const output = fs.createWriteStream('/var/log/cron.log');
+    const errorOutput = fs.createWriteStream('/var/log/cron.log');
+
+    const logger = new Console({ stdout: output, stderr: errorOutput });
+
+    return {
+        info: (...args) => logger.info('[aurora-borealis-info]', ...args),
+        error: (...args) => logger.error('[aurora-borealis-error]', ...args),
+    };
 }

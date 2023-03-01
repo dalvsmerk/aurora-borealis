@@ -9,6 +9,7 @@ function configure() {
         sendgridApiKey: getEnvVarOrThrow('SENDGRID_API_KEY'),
         mailTo: getEnvVarOrThrow('MAIL_TO'),
         mailFrom: getEnvVarOrThrow('MAIL_FROM'),
+        port: Number(getEnvVarOrDefault('PORT', 3000)),
     };
 }
 
