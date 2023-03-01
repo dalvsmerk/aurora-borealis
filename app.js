@@ -5,6 +5,11 @@ const REALTIME_IMAGE = 'https://www.sgo.fi/Data/RealTime/Kuvat/skyi_SOD_latest.j
 
 init();
 
+// function entrypoint() {
+//     const hours3 = 1000 * 60 * 60 * 3;
+//     setInterval(init, hours3);
+// }
+
 async function init() {
     let config;
 
@@ -16,6 +21,8 @@ async function init() {
 
         process.exit(1);
     }
+
+    console.log('Aurora Borealis started successfully')
 
     try {
         const lastDatapoint = await fetchLastKpIndex();
