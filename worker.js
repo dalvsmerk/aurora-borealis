@@ -1,7 +1,5 @@
 // 5 */3 * * *
 
-const { Console } = require('console');
-const fs = require('fs');
 const sendgrid = require('@sendgrid/mail');
 const { configure } = require('./config');
 const logger = createLogger();
@@ -22,13 +20,16 @@ async function init() {
         process.exit(1);
     }
 
-    logger.info('Aurora Borealis started successfully')
+    logger.info('Aurora Borealis started successfully');
+
+    const telegramApi = createTelegramApi(config);
 
     try {
         const lastDatapoint = await fetchLastKpIndex();
 
         if (shouldNotify(lastDatapoint)) {
-            sendEmailNotification(sendgrid, config);
+            await sendEmailNotification(sendgrid, config, lastDatapoint.kpIndex);
+            await sendTelegramNotification(telegramApi, lastDatapoint.kpIndex);
         }
     } catch (error) {
         logger.info('Failed to fetch last Kp-index data', error);
@@ -37,14 +38,14 @@ async function init() {
     }
 }
 
-function emailBody() {
+function emailBody(kpIndex) {
     const nowGMT = new Date().toGMTString();
     return `
 <p>Hey!</p>
 <p>There is high probability of aurora borealis visible, check your forecast!</p>
-<p>Best regards,</p>
+<p>Kp-index is ${kpIndex} at ${nowGMT}</p>
+<p>Best,</p>
 <p>Aurora Borealis Notifier</p>
-<p>${nowGMT}</p>
 <img src="${REALTIME_IMAGE}" width="300" alt="Aurora Borealis" />
     `;
 }
@@ -56,7 +57,7 @@ function shouldNotify(datapoint) {
 }
 
 async function fetchLastKpIndex() {
-    /** 
+    /**
      * Latest Kp index data
      * This data is updated each 3 hours GMT starting from midnight,
      * i.e. 00:00, 03:00, 06:00, 09:00 etc
@@ -88,17 +89,17 @@ function parseNOAADataPoint(noaaDatapoint) {
     };
 }
 
-async function sendEmailNotification(mailClient, config) {
-    try {
-        const RECEIVER_DELIMITER = ',';
-        const receivers = config.mailTo.split(RECEIVER_DELIMITER);
+async function sendEmailNotification(mailClient, config, kpIndex) {
+    const RECEIVER_DELIMITER = ',';
+    const receivers = config.mailTo.split(RECEIVER_DELIMITER);
 
+    try {
         for (const receiver of receivers) {
             const message = { 
                 to: receiver,
                 from: config.mailFrom,
                 subject: 'Aurora Borealis notification',
-                html: emailBody(),
+                html: emailBody(kpIndex),
             };
     
             const response = await mailClient.send(message);
@@ -109,20 +110,48 @@ async function sendEmailNotification(mailClient, config) {
                 logger.error('Failed to send email notification', response);
             }
         }
-
     } catch (error) {
-        logger.error('Failed to send email notification', error.message);
+        logger.error('Failed to send email notification', response);
+    }
+}
+
+async function sendTelegramNotification(telegramApi, kpIndex) {
+    const message = `
+Check your forecast, there is a high chance of seeing northern light!
+Kp-index is ${kpIndex}.
+    `;
+
+    await telegramApi.sendMessage(message);
+}
+
+
+function createTelegramApi(config) {
+    const base = `https://api.telegram.org/bot${config.telegramBotApiToken}`;
+
+    return {
+        sendMessage: async (text) => {
+            const encodedText = encodeURIComponent(text);
+            const url = base + `/sendMessage?chat_id=${config.telegramChannelId}&text=${encodedText}`;
+            
+            try {
+                const response = await fetch(url);
+                const result = await response.json();
+
+                if (!result.ok) {
+                    throw result;
+                }
+
+                logger.info('Successfully sent Telegram message');
+            } catch (error) {
+                logger.error('Failed to send Telegram message', error);
+            }
+        },
     }
 }
 
 function createLogger() {
-    const output = fs.createWriteStream('/var/log/cron.log');
-    const errorOutput = fs.createWriteStream('/var/log/cron.log');
-
-    const logger = new Console({ stdout: output, stderr: errorOutput });
-
     return {
-        info: (...args) => logger.info('[aurora-borealis-info]', ...args),
-        error: (...args) => logger.error('[aurora-borealis-error]', ...args),
+        info: (...args) => console.info('[aurora-borealis-info]', ...args),
+        error: (...args) => console.error('[aurora-borealis-error]', ...args),
     };
 }

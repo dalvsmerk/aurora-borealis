@@ -9,6 +9,8 @@ function configure() {
         sendgridApiKey: getEnvVarOrThrow('SENDGRID_API_KEY'),
         mailTo: getEnvVarOrThrow('MAIL_TO'),
         mailFrom: getEnvVarOrThrow('MAIL_FROM'),
+        telegramBotApiToken: getEnvVarOrThrow('TELEGRAM_BOT_API_TOKEN'),
+        telegramChannelId: getEnvVarOrThrow('TELEGRAM_CHANNEL_NAME'),
     };
 }
 
