@@ -89,20 +89,25 @@ function parseNOAADataPoint(noaaDatapoint) {
 }
 
 async function sendEmailNotification(mailClient, config) {
-    const message = { 
-        to: config.mailTo,
-        from: config.mailFrom,
-        subject: 'Aurora Borealis notification',
-        html: emailBody(),
-    };
-
     try {
-        const response = await mailClient.send(message);
+        const RECEIVER_DELIMITER = ',';
+        const receivers = config.mailTo.split(RECEIVER_DELIMITER);
 
-        if (response[0].statusCode < 400) {
-            logger.info('Email notification is sent successfully!');
-        } else {
-            logger.error('Failed to send email notification', response);
+        for (const receiver of receivers) {
+            const message = { 
+                to: receiver,
+                from: config.mailFrom,
+                subject: 'Aurora Borealis notification',
+                html: emailBody(),
+            };
+    
+            const response = await mailClient.send(message);
+    
+            if (response[0].statusCode < 400) {
+                logger.info('Email notification is sent successfully!');
+            } else {
+                logger.error('Failed to send email notification', response);
+            }
         }
 
     } catch (error) {
